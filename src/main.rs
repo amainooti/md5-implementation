@@ -20,6 +20,14 @@ fn md5_pad(msg: &[u8]) -> Vec<u8> {
     message
 }
 
+fn compute_t() -> [u32; 64] {
+    let mut t = [0u32; 64];
+    for i in 0..64 {
+        t[i] = ((i as f64 + 1.0).sin().abs() * 4294967296.0_f64) as u32;
+    }
+    t
+}
+
 // ====================== MD5 Round Functions (Ticket) ======================
 
 /// F(b, c, d) = (b & c) | (!b & d)
@@ -60,6 +68,17 @@ impl MD5State {
         }
     }
 }
+
+const S: [u32; 64] = [
+    // Round 1 (F function) - 7,12,17,22 repeated 4 times
+    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+    // Round 2 (G function) - 5,9,14,20 repeated 4 times
+    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+    // Round 3 (H function) - 4,11,16,23 repeated 4 times
+    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+    // Round 4 (I function) - 6,10,15,21 repeated 4 times
+    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
+];
 
 fn main() {
     let str_text = "hello";
