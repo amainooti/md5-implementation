@@ -80,7 +80,69 @@ const S: [u32; 64] = [
     6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
 ];
 
+fn process_block(state: &mut MD5State, block: &[u8], t: &[u32; 64]) {
+    // 1. Break block into 16 u32 words (little-endian)
+    let mut m = [0u32; 16];
+    for i in 0..16 {
+        m[i] = u32::from_le_bytes([
+            block[i * 4],
+            block[i * 4 + 1],
+            block[i * 4 + 2],
+            block[i * 4 + 3],
+        ]);
+    }
+
+    // 2. Initialize working vars
+    let mut a = state.a;
+    let mut b = state.b;
+    let mut c = state.c;
+    let mut d = state.d;
+
+    // Save original state
+    let (aa, bb, cc, dd) = (a, b, c, d);
+
+    // 3. Main loop
+    for i_idx in 0..64 {
+        let (f_val, k) = match i_idx {
+            0..=15 => (f(b, c, d), i_idx),
+            16..=31 => (g(b, c, d), (5 * i_idx + 1) % 16),
+            32..=47 => (h(b, c, d), (3 * i_idx + 5) % 16),
+            _ => (i(b, c, d), (7 * i_idx) % 16),
+        };
+
+        let temp = a
+            .wrapping_add(f_val)
+            .wrapping_add(m[k])
+            .wrapping_add(t[i_idx]);
+
+        let new_b = b.wrapping_add(temp.rotate_left(S[i_idx]));
+
+        // Rotate state
+        a = d;
+        d = c;
+        c = b;
+        b = new_b;
+    }
+
+    // 4. Feed-forward
+    state.a = state.a.wrapping_add(aa);
+    state.b = state.b.wrapping_add(bb);
+    state.c = state.c.wrapping_add(cc);
+    state.d = state.d.wrapping_add(dd);
+}
+
 fn main() {
+    let num: i32 = 15;
+    let mut arr: Vec<i32> = Vec::new();
+    let mut counter = 0;
+
+    while counter < num {
+        arr.push(counter);
+        counter += 1;
+    }
+
+    println!("{:?}", arr);
+
     let str_text = "hello";
     let message = str_text.as_bytes();
     let padded = md5_pad(message);
